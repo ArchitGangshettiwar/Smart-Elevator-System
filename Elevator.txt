@@ -1,0 +1,158 @@
+int a = 5;  // Arduino pins connected with 7 segment pins
+int b = 6;
+int c = 7;
+int d = 8;
+int e = 9;
+int f = 10;
+int g = 11;
+
+const byte button1Pin = 2;  // Button 1 pin
+const byte button2Pin = 3;  // Button 2 pin
+const byte button3Pin = 4;  // Button 3 pin
+
+bool button1State = 0;  // current state of button 1
+bool button2State = 0;  // current state of button 2
+bool button3State = 0;  // current state of button 3
+
+bool lastButton1State = 0;  // previous state of button 1
+bool lastButton2State = 0;  // previous state of button 2
+bool lastButton3State = 0;  // previous state of button 3
+
+bool displayOn = false;     // flag to track the display state
+byte currentNumber = 0;     // current number displayed on the 7-segment display
+
+const int photoresistorPin = A0;  // Photoresistor pin
+const int ledPin = 12;             // LED pin
+
+const int darkThreshold = 500;    // Threshold value for darkness
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);      // Turn off the LED initially
+  Serial.begin(9600);
+  
+  pinMode(a, OUTPUT);
+  pinMode(b, OUTPUT);
+  pinMode(c, OUTPUT);
+  pinMode(d, OUTPUT);
+  pinMode(e, OUTPUT);
+  pinMode(f, OUTPUT);
+  pinMode(g, OUTPUT);
+
+  pinMode(button1Pin, INPUT_PULLUP);
+  pinMode(button2Pin, INPUT_PULLUP);
+  pinMode(button3Pin, INPUT_PULLUP);
+}
+
+void loop() {
+  checkButton(button1Pin, 1);
+  checkButton(button2Pin, 2);
+  checkButton(button3Pin, 3);
+  
+  int lightLevel = analogRead(photoresistorPin);
+  Serial.print("Light Level: ");
+  Serial.print(lightLevel);
+  
+   if (lightLevel < darkThreshold) {
+    digitalWrite(ledPin, HIGH);   // Turn on the LED when it's dark
+    Serial.println(" Presence of Person detected");
+  } else {
+    digitalWrite(ledPin, LOW);    // Turn off the LED when it's bright
+  }
+
+  delay(10);   
+  
+  if (displayOn) {
+    Serial.print(" - Floor ");
+    Serial.print(currentNumber);
+    Serial.println(" is being called.");
+    delay(200);  // Delay to make the message easier to read
+  } else {
+    Serial.println(" - No Floor is being called.");
+    delay(200);  // Delay to make the message easier to read
+  }
+  
+  if (digitalRead(ledPin) == HIGH) {
+    Serial.print("Presence detected, Passage granted on floor ");
+    Serial.println(currentNumber);
+    delay(200);  // Delay to make the message easier to read
+  } else {
+    Serial.println("No Presence detected, No Passage granted");
+    delay(200);  // Delay to make the message easier to read
+  }
+  
+  delay(50); 
+}
+
+void checkButton(byte buttonPin, byte number) {
+  bool buttonState = digitalRead(buttonPin);
+  bool lastButtonState = 0;
+
+  if (buttonPin == button1Pin) {
+    lastButtonState = lastButton1State;
+  } else if (buttonPin == button2Pin) {
+    lastButtonState = lastButton2State;
+  } else if (buttonPin == button3Pin) {
+    lastButtonState = lastButton3State;
+  }
+
+  if (buttonState != lastButtonState) {
+    if (buttonState == LOW) {
+      // if the current state is LOW then the button went from off to on:
+      if (displayOn && number == currentNumber) {
+        displayOn = false;
+        clearDisplay();
+      } else {
+        displayOn = true;
+        displayNumber(number);
+        currentNumber = number;
+      }
+    }
+  }
+
+  if (buttonPin == button1Pin) {
+    lastButton1State = buttonState;
+  } else if (buttonPin == button2Pin) {
+    lastButton2State = buttonState;
+  } else if (buttonPin == button3Pin) {
+    lastButton3State = buttonState;
+  }
+}
+
+void displayNumber(byte number) {
+  if (number == 1) {
+    digitalWrite(a, HIGH);
+    digitalWrite(b, LOW);
+    digitalWrite(c, LOW);
+    digitalWrite(d, HIGH);
+    digitalWrite(e, HIGH);
+    digitalWrite(f, HIGH);
+    digitalWrite(g, HIGH);
+  } else if (number == 2) {
+    digitalWrite(a, LOW);
+    digitalWrite(b, LOW);
+    digitalWrite(c, HIGH);
+    digitalWrite(d, LOW);
+    digitalWrite(e, LOW);
+    digitalWrite(f, HIGH);
+    digitalWrite(g, LOW);
+  } else if (number == 3) {
+    digitalWrite(a, LOW);
+    digitalWrite(b, LOW);
+    digitalWrite(c, LOW);
+    digitalWrite(d, LOW);
+    digitalWrite(e, HIGH);
+    digitalWrite(f, HIGH);
+    digitalWrite(g, LOW);
+  }
+}
+
+void clearDisplay() {
+  digitalWrite(a, HIGH);
+  digitalWrite(b, HIGH);
+  digitalWrite(c, HIGH);
+  digitalWrite(d, HIGH);
+  digitalWrite(e, HIGH);
+  digitalWrite(f, HIGH);
+  digitalWrite(g, HIGH);
+}
